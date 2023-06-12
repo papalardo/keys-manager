@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:keys_manager/modules/loans/application/bloc/loan_bloc.dart';
-import 'package:keys_manager/modules/loans/application/interfaces/loans_repository.dart';
-import 'package:keys_manager/modules/loans/application/ui/list_loans_screen.dart';
-import 'package:keys_manager/modules/loans/domain/interfaces/loans_data.dart';
-import 'package:keys_manager/modules/loans/domain/repositories/loans_repository.dart';
-import 'package:keys_manager/modules/loans/infra/data/loans_data.dart';
+import 'package:keys_manager/application/interfaces/keys_repository.dart';
+import 'package:keys_manager/application/interfaces/loans_repository.dart';
+import 'package:keys_manager/application/interfaces/users_repository.dart';
+import 'package:keys_manager/application/routes.dart';
+import 'package:keys_manager/application/screens/home_screen.dart';
+import 'package:keys_manager/application/screens/keys_form_screen.dart';
+import 'package:keys_manager/application/screens/loans_form_screen.dart';
+import 'package:keys_manager/application/screens/users_form_screen.dart';
+import 'package:keys_manager/application/screens/users_list_screen.dart';
+import 'package:keys_manager/domain/interfaces/keys_data.dart';
+import 'package:keys_manager/domain/interfaces/loans_data.dart';
+import 'package:keys_manager/domain/interfaces/users_data.dart';
+import 'package:keys_manager/domain/repositories/keys_repositories.dart';
+import 'package:keys_manager/domain/repositories/loans_repository.dart';
+import 'package:keys_manager/domain/repositories/users_repositories.dart';
+import 'package:keys_manager/infra/data/keys_data.dart';
+import 'package:keys_manager/infra/data/loans_data.dart';
+import 'package:keys_manager/infra/data/users_data.dart';
 
 GetIt getIt = GetIt.instance;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   getIt.registerSingleton<ILoansData>(LoansData());
   getIt.registerSingleton<ILoansRepository>(LoansRepository(data: getIt.get()));
-  getIt.registerSingleton<LoanBloc>(LoanBloc(repository: getIt.get()));
+  getIt.registerSingleton<IUsersData>(UsersData());
+  getIt.registerSingleton<IUsersRepository>(UsersRepository(data: getIt.get()));
+  getIt.registerSingleton<IKeysData>(KeysData());
+  getIt.registerSingleton<IKeysRepository>(KeysRepository(data: getIt.get()));
 
   runApp(const MyApp());
 }
@@ -21,110 +37,26 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      initialRoute: '/',
+      title: 'Key Manager',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue),
+      initialRoute: Routes.HOME,
       routes: {
-        '/': (_) => BlocProvider<LoanBloc>(
-              create: (_) {
-                var bloc = getIt.get<LoanBloc>();
-                bloc.add(const LoanEvent.fetchAll());
-                return bloc;
-              },
-              child: const ListLoansScreen(),
-            )
+        Routes.HOME: (_) => HomeScreen.make(),
+        // Routes.HOME: (_) {
+        //   return BlocProvider<ListLoansBloc>(
+        //     create: (_) => getIt.get<ListLoansBloc>(),
+        //     child: const ListLoansScreen(),
+        //   );
+        // },
+        Routes.USER_FORM: (_) => UsersFormScreen.make(),
+        Routes.USER_LIST: (_) => UsersListScreen.make(),
+        Routes.KEYS_FORM: (_) => KeysFormScreen.make(),
+        Routes.LOANS_FORM: (_) => LoansFormScreen.make(),
       },
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
